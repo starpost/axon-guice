@@ -35,11 +35,12 @@ import java.util.Arrays;
 /**
  * Axon-Guice main integration module - it binds all Axon components into Guice context.
  * Module is highly customizable - all methods can be overridden in subclasses.
- * <p/>
+ * <p>
  * This module also brings JSR-250 support which is required for some of Axon parts.
  * You can always turn off this provided implementation by overriding {#isJsr250SupportEnabled} method, but anyway some
  * JSR-250 implementation is must-have for appropriate Axon existence.
- *
+ * </p>
+ * 
  * @author Alexey Krylov
  * @since 06.02
  */

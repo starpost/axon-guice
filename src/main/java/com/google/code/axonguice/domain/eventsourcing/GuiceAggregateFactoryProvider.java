@@ -29,7 +29,7 @@ import javax.inject.Inject;
  * Provider of {@link GuiceGenericAggregateFactory} - this factory support injection into aggregates.
  *
  * @author Alexey Krylov
- * @see DomainModule#bindAggregateFactory(Class)
+ * @see DomainModule
  * @since 08.02.13
  */
 public class GuiceAggregateFactoryProvider implements Provider<GuiceGenericAggregateFactory> {
