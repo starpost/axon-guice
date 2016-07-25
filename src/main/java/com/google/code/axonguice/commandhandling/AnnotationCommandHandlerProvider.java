@@ -19,13 +19,15 @@
 package com.google.code.axonguice.commandhandling;
 
 
+import javax.inject.Inject;
+
+import org.axonframework.commandhandling.CommandBus;
+import org.axonframework.commandhandling.annotation.AnnotationCommandHandlerAdapter;
+import org.axonframework.common.annotation.ParameterResolverFactory;
+
 import com.google.inject.Injector;
 import com.google.inject.Provider;
 import com.google.inject.ProvisionException;
-import org.axonframework.commandhandling.CommandBus;
-import org.axonframework.commandhandling.annotation.AnnotationCommandHandlerAdapter;
-
-import javax.inject.Inject;
 
 /**
  * Registers specified handler class as CommandBus subscriber.
@@ -41,6 +43,7 @@ public class AnnotationCommandHandlerProvider implements Provider {
 
     protected Injector injector;
     protected CommandBus commandBus;
+    protected ParameterResolverFactory resolver; 
     protected Class<?> handlerClass;
 
     /*===========================================[ CONSTRUCTORS ]=================*/
@@ -50,9 +53,10 @@ public class AnnotationCommandHandlerProvider implements Provider {
     }
 
     @Inject
-    void init(Injector injector, CommandBus commandBus) {
+    void init(Injector injector, CommandBus commandBus, ParameterResolverFactory resolver) {
         this.injector = injector;
         this.commandBus = commandBus;
+        this.resolver = resolver;
     }
 
     /*===========================================[ INTERFACE METHODS ]============*/
@@ -62,7 +66,11 @@ public class AnnotationCommandHandlerProvider implements Provider {
         try {
             Object handlerInstance = handlerClass.newInstance();
             injector.injectMembers(handlerInstance);
-            AnnotationCommandHandlerAdapter.subscribe(handlerInstance, commandBus);
+            // AnnotationCommandHandlerAdapter.subscribe(handlerInstance, commandBus);
+            AnnotationCommandHandlerAdapter adapter = new AnnotationCommandHandlerAdapter(handlerInstance, resolver);
+            for (String cmd : adapter.supportedCommands()) {
+                commandBus.subscribe(cmd, adapter);
+            }
             return handlerInstance;
         } catch (Exception e) {
             throw new ProvisionException(String.format("Unable to instantiate CommandHandler class: [%s]", handlerClass), e);
