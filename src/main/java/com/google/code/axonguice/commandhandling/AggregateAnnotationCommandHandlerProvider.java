@@ -18,14 +18,22 @@
 
 package com.google.code.axonguice.commandhandling;
 
-import com.google.inject.*;
-import com.google.inject.util.Types;
+import javax.inject.Inject;
+
 import org.axonframework.commandhandling.CommandBus;
+import org.axonframework.commandhandling.CommandTargetResolver;
 import org.axonframework.commandhandling.annotation.AggregateAnnotationCommandHandler;
+import org.axonframework.commandhandling.annotation.AnnotationCommandTargetResolver;
+import org.axonframework.common.annotation.ParameterResolverFactory;
 import org.axonframework.domain.AggregateRoot;
 import org.axonframework.repository.Repository;
 
-import javax.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.Provider;
+import com.google.inject.ProvisionException;
+import com.google.inject.TypeLiteral;
+import com.google.inject.util.Types;
 
 /**
  * Registers specified aggregate root class as CommandBus subscriber.
@@ -41,6 +49,7 @@ public class AggregateAnnotationCommandHandlerProvider implements Provider {
 
     protected Injector injector;
     protected CommandBus commandBus;
+    protected ParameterResolverFactory resolver;
 
     private Class<? extends AggregateRoot> aggregateRootClass;
 
@@ -51,9 +60,10 @@ public class AggregateAnnotationCommandHandlerProvider implements Provider {
     }
 
     @Inject
-    void init(Injector injector, CommandBus commandBus) {
+    void init(Injector injector, CommandBus commandBus, ParameterResolverFactory resolver) {
         this.injector = injector;
         this.commandBus = commandBus;
+        this.resolver = resolver;
     }
 
     /*===========================================[ INTERFACE METHODS ]============*/
@@ -62,7 +72,13 @@ public class AggregateAnnotationCommandHandlerProvider implements Provider {
     public Object get() {
         try {
             Repository repository = (Repository) injector.getInstance(Key.get(TypeLiteral.get(Types.newParameterizedType(Repository.class, aggregateRootClass))));
-            AggregateAnnotationCommandHandler.subscribe(aggregateRootClass, repository, commandBus);
+            // AggregateAnnotationCommandHandler.subscribe(aggregateRootClass, repository, commandBus);
+			CommandTargetResolver commandTargetResolver = new AnnotationCommandTargetResolver();
+			AggregateAnnotationCommandHandler adapter = new AggregateAnnotationCommandHandler(aggregateRootClass,
+					repository, commandTargetResolver, resolver);
+			for (Object supportedCommand : adapter.supportedCommands()) {
+				commandBus.subscribe((String) supportedCommand, adapter);
+			}
             return aggregateRootClass;
         } catch (Exception e) {
             throw new ProvisionException(String.format("Unable to instantiate AggregateCommandHandler class for: [%s]", aggregateRootClass), e);
