@@ -18,13 +18,15 @@
 
 package com.google.code.axonguice.eventhandling;
 
-import com.google.inject.Injector;
-import com.google.inject.Provider;
-import com.google.inject.ProvisionException;
+import javax.inject.Inject;
+
+import org.axonframework.common.annotation.ParameterResolverFactory;
 import org.axonframework.eventhandling.EventBus;
 import org.axonframework.eventhandling.annotation.AnnotationEventListenerAdapter;
 
-import javax.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Provider;
+import com.google.inject.ProvisionException;
 
 /**
  * Registers specified handler class as EventHandler subscriber.
@@ -40,7 +42,7 @@ public class AnnotationEventHandlerProvider implements Provider {
 
     protected Injector injector;
     protected EventBus eventBus;
-
+    protected ParameterResolverFactory resolver; 
     protected Class<?> handlerClass;
 
     /*===========================================[ CONSTRUCTORS ]=================*/
@@ -50,9 +52,10 @@ public class AnnotationEventHandlerProvider implements Provider {
     }
 
     @Inject
-    void init(Injector injector, EventBus eventBus) {
+    void init(Injector injector, EventBus eventBus, ParameterResolverFactory resolver) {
         this.injector = injector;
         this.eventBus = eventBus;
+        this.resolver = resolver;
     }
 
     /*===========================================[ INTERFACE METHODS ]============*/
@@ -62,7 +65,8 @@ public class AnnotationEventHandlerProvider implements Provider {
         try {
             Object handlerInstance = handlerClass.newInstance();
             injector.injectMembers(handlerInstance);
-            AnnotationEventListenerAdapter.subscribe(handlerInstance, eventBus);
+            AnnotationEventListenerAdapter adapter = new AnnotationEventListenerAdapter(handlerInstance, resolver);
+            eventBus.subscribe(adapter);
             return handlerInstance;
         } catch (Exception e) {
             throw new ProvisionException(String.format("Unable to instantiate EventHandler class: [%s]", handlerClass), e);
