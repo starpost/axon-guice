@@ -43,13 +43,9 @@ import com.thoughtworks.xstream.converters.Converter;
  */
 public abstract class JdbcEventStoreProvider implements Provider<SnapshotEventStore> {
 
-	final AxonConfig config;
-
-	public JdbcEventStoreProvider(AxonConfig config) {
-		this.config = config;
-	}
-
 	protected abstract DataSource getDataSource();
+
+	protected abstract AxonConfig getAxonConfig();
 
 	@SuppressWarnings("rawtypes")
 	@Override
@@ -75,7 +71,7 @@ public abstract class JdbcEventStoreProvider implements Provider<SnapshotEventSt
 		// Converters for EventStore
 		XStreamSerializer eventSerializer = new XStreamSerializer();
 		XStream xStream = eventSerializer.getXStream();
-		for (Class<? extends Converter> cls : config.getEventSerializerConverterClasses()) {
+		for (Class<? extends Converter> cls : getAxonConfig().getEventSerializerConverterClasses()) {
 			try {
 				xStream.registerConverter(cls.newInstance());
 			} catch (Exception e) {
