@@ -21,9 +21,12 @@ package com.google.code.axonguice.config;
 import java.util.Set;
 
 import org.axonframework.eventsourcing.EventSourcedAggregateRoot;
+import org.axonframework.eventstore.EventStore;
+import org.axonframework.eventstore.SnapshotEventStore;
 import org.axonframework.saga.annotation.AbstractAnnotatedSaga;
 
 import com.google.common.collect.Sets;
+import com.google.inject.Provider;
 import com.thoughtworks.xstream.converters.Converter;
 
 /**
@@ -38,6 +41,8 @@ public class AxonConfigBuilder {
 	Set<Class<? extends AbstractAnnotatedSaga>> sagaClasses = Sets.newHashSet();
 	Set<Class<?>> commandGatewayClasses = Sets.newHashSet();
 	Set<Class<? extends Converter>> converterClasses = Sets.newHashSet();
+	Class<Provider<? extends EventStore>> eventStoreProviderClass;
+	Class<Provider<? extends SnapshotEventStore>> snapshotEventStoreProviderClass;
 
 	public AxonConfigBuilder withAggregate(Class<? extends EventSourcedAggregateRoot<?>> aggregateClass) {
 		aggregateClasses.add(aggregateClass);
@@ -94,9 +99,20 @@ public class AxonConfigBuilder {
 		return this;
 	}
 
+	public AxonConfigBuilder withEventStoreProvider(Class<Provider<? extends EventStore>> eventStoreProviderClass) {
+		this.eventStoreProviderClass = eventStoreProviderClass;
+		return this;
+	}
+
+	public AxonConfigBuilder withSnapshotEventStoreProvider(
+			Class<Provider<? extends SnapshotEventStore>> snapshotEventStoreProviderClass) {
+		this.snapshotEventStoreProviderClass = snapshotEventStoreProviderClass;
+		return this;
+	}
+
 	public AxonConfig build() {
 		return new AxonConfig(aggregateClasses, commandHandlerClasses, eventHandlerClasses, sagaClasses,
-				commandGatewayClasses, converterClasses);
+				commandGatewayClasses, eventStoreProviderClass, snapshotEventStoreProviderClass, converterClasses);
 	}
 
 	public static AxonConfigBuilder create() {

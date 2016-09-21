@@ -63,12 +63,13 @@ public class SimpleAxonGuiceModule extends AxonGuiceModule {
 
 			@Override
 			protected void bindEventStore() {
-				bind(EventStore.class).toProvider(JdbcEventStoreProvider.class).in(Scopes.SINGLETON);
+				bind(EventStore.class).toProvider(config.getEventStorePoviderClass()).in(Scopes.SINGLETON);
 			}
 
 			@Override
 			protected void bindSnaphotEventStore() {
-				bind(SnapshotEventStore.class).toProvider(JdbcEventStoreProvider.class).in(Scopes.SINGLETON);
+				bind(SnapshotEventStore.class).toProvider(config.getSnapshotEventStorePoviderClass())
+						.in(Scopes.SINGLETON);
 			}
 
 		};
