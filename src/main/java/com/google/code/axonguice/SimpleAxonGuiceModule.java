@@ -89,6 +89,7 @@ public class SimpleAxonGuiceModule extends AxonGuiceModule {
 			@Override
 			@SuppressWarnings({ "rawtypes", "unchecked" })
 			protected void configure() {
+				super.configure();
 				// 统一提供一个GatewayProxyFactory
 				bind(GatewayProxyFactory.class).toProvider(GatewayProxyFactoryProvider.class).in(Singleton.class);
 				for (Class<?> gatewayClass : config.getCommandGatewayClasses()) {
