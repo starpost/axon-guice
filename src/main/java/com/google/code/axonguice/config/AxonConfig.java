@@ -20,13 +20,14 @@ package com.google.code.axonguice.config;
 
 import java.util.Set;
 
+import javax.inject.Provider;
+
 import org.axonframework.eventsourcing.EventSourcedAggregateRoot;
 import org.axonframework.eventstore.EventStore;
 import org.axonframework.eventstore.SnapshotEventStore;
 import org.axonframework.saga.annotation.AbstractAnnotatedSaga;
 
 import com.google.common.collect.FluentIterable;
-import com.google.inject.Provider;
 import com.thoughtworks.xstream.converters.Converter;
 
 /**
@@ -41,16 +42,16 @@ public class AxonConfig {
 	final Set<Class<? extends AbstractAnnotatedSaga>> sagaClasses;
 	final Set<Class<?>> commandGatewayClasses;
 	final Set<Class<? extends Converter>> converters;
-	final Class<Provider<? extends EventStore>> eventStoreProviderClass;
-	final Class<Provider<? extends SnapshotEventStore>> snapshotEventStoreProviderClass;
+	final Class<? extends Provider<? extends EventStore>> eventStoreProviderClass;
+	final Class<? extends Provider<? extends SnapshotEventStore>> snapshotEventStoreProviderClass;
 
 	public AxonConfig(Set<Class<? extends EventSourcedAggregateRoot<?>>> aggregateClasses,
 			Set<Class<?>> commandHandlerClasses, //
 			Set<Class<?>> eventHandlerClasses, //
 			Set<Class<? extends AbstractAnnotatedSaga>> sagaClasses, //
 			Set<Class<?>> commandGatewayClasses, //
-			Class<Provider<? extends EventStore>> eventStoreProviderClass, //
-			Class<Provider<? extends SnapshotEventStore>> snapshotEventStoreProviderClass, //
+			Class<? extends Provider<? extends EventStore>> eventStoreProviderClass, //
+			Class<? extends Provider<? extends SnapshotEventStore>> snapshotEventStoreProviderClass, //
 			Set<Class<? extends Converter>> converters) {
 		super();
 		this.aggregateClasses = aggregateClasses;
@@ -115,11 +116,11 @@ public class AxonConfig {
 		return converters;
 	}
 
-	public Class<Provider<? extends EventStore>> getEventStorePoviderClass() {
+	public Class<? extends Provider<? extends EventStore>> getEventStorePoviderClass() {
 		return eventStoreProviderClass;
 	}
 
-	public Class<Provider<? extends SnapshotEventStore>> getSnapshotEventStorePoviderClass() {
+	public Class<? extends Provider<? extends SnapshotEventStore>> getSnapshotEventStorePoviderClass() {
 		return snapshotEventStoreProviderClass;
 	}
 

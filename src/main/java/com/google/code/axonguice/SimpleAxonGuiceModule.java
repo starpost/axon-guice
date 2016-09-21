@@ -29,7 +29,6 @@ import com.google.code.axonguice.commandhandling.CommandHandlingModule;
 import com.google.code.axonguice.config.AxonConfig;
 import com.google.code.axonguice.config.CustomCommandGatewayProvider;
 import com.google.code.axonguice.config.GatewayProxyFactoryProvider;
-import com.google.code.axonguice.config.JdbcEventStoreProvider;
 import com.google.code.axonguice.domain.DomainModule;
 import com.google.code.axonguice.domain.eventsourcing.EventSourcedDomainModule;
 import com.google.code.axonguice.eventhandling.EventHandlingModule;
@@ -63,13 +62,19 @@ public class SimpleAxonGuiceModule extends AxonGuiceModule {
 
 			@Override
 			protected void bindEventStore() {
-				bind(EventStore.class).toProvider(config.getEventStorePoviderClass()).in(Scopes.SINGLETON);
+				if (config.getEventStorePoviderClass() != null) {
+					bind(EventStore.class).toProvider(config.getEventStorePoviderClass()).in(Scopes.SINGLETON);
+				} else if (config.getSnapshotEventStorePoviderClass() != null) {
+					bind(EventStore.class).toProvider(config.getSnapshotEventStorePoviderClass()).in(Scopes.SINGLETON);
+				}
 			}
 
 			@Override
 			protected void bindSnaphotEventStore() {
-				bind(SnapshotEventStore.class).toProvider(config.getSnapshotEventStorePoviderClass())
-						.in(Scopes.SINGLETON);
+				if (config.getSnapshotEventStorePoviderClass() != null) {
+					bind(SnapshotEventStore.class).toProvider(config.getSnapshotEventStorePoviderClass())
+							.in(Scopes.SINGLETON);
+				}
 			}
 
 		};
