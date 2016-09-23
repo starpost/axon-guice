@@ -19,6 +19,8 @@
 package com.google.code.axonguice.config;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 
 import javax.inject.Provider;
 import javax.sql.DataSource;
@@ -29,7 +31,10 @@ import org.axonframework.eventstore.SnapshotEventStore;
 import org.axonframework.eventstore.jdbc.DefaultEventEntryStore;
 import org.axonframework.eventstore.jdbc.GenericEventSqlSchema;
 import org.axonframework.eventstore.jdbc.JdbcEventStore;
+import org.axonframework.eventstore.jdbc.SchemaConfiguration;
 import org.axonframework.serializer.xml.XStreamSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.converters.Converter;
@@ -43,14 +48,20 @@ import com.thoughtworks.xstream.converters.Converter;
  */
 public abstract class JdbcEventStoreProvider implements Provider<SnapshotEventStore> {
 
+	final static Logger logger = LoggerFactory.getLogger(JdbcEventStoreProvider.class);
+
 	protected abstract DataSource getDataSource();
 
 	protected abstract AxonConfig getAxonConfig();
 
+	final SchemaConfiguration schemaConfig = new SchemaConfiguration();
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	final GenericEventSqlSchema schema = new GenericEventSqlSchema((Class<?>) byte[].class, schemaConfig);
+
 	@SuppressWarnings("rawtypes")
 	@Override
 	public SnapshotEventStore get() {
-		GenericEventSqlSchema schema = new GenericEventSqlSchema();
 		DataSource ds = getDataSource();
 		Connection conn = null;
 		try {
@@ -58,12 +69,12 @@ public abstract class JdbcEventStoreProvider implements Provider<SnapshotEventSt
 			tryCreateDomainEventEntryTable(schema, conn);
 			tryCreateSnapshotEventEntryTable(schema, conn);
 		} catch (Exception e) {
+			logger.error("Error Initializing Event Store Tables", e);
 		} finally {
 			if (conn != null) {
 				try {
 					conn.close();
 				} catch (Exception e) {
-					e.printStackTrace();
 				}
 			}
 		}
@@ -75,7 +86,7 @@ public abstract class JdbcEventStoreProvider implements Provider<SnapshotEventSt
 			try {
 				xStream.registerConverter(cls.newInstance());
 			} catch (Exception e) {
-				e.printStackTrace();
+				logger.error("Error Registering Converter: " + cls.getName(), e);
 			}
 		}
 
@@ -90,16 +101,35 @@ public abstract class JdbcEventStoreProvider implements Provider<SnapshotEventSt
 	@SuppressWarnings("rawtypes")
 	private void tryCreateDomainEventEntryTable(GenericEventSqlSchema schema, Connection conn) {
 		try {
-			schema.sql_createDomainEventEntryTable(conn).execute();
+			if (!testExists(schemaConfig.domainEventEntryTable(), conn)) {
+				schema.sql_createDomainEventEntryTable(conn).execute();
+			}
 		} catch (Exception e) {
+			logger.error("Error Creating Table " + schemaConfig.domainEventEntryTable(), e);
 		}
 	}
 
 	@SuppressWarnings("rawtypes")
 	private void tryCreateSnapshotEventEntryTable(GenericEventSqlSchema schema, Connection conn) {
 		try {
-			schema.sql_createSnapshotEventEntryTable(conn).execute();
+			if (!testExists(schemaConfig.snapshotEntryTable(), conn)) {
+				schema.sql_createSnapshotEventEntryTable(conn).execute();
+			}
 		} catch (Exception e) {
+			logger.error("Error Creating Table " + schemaConfig.snapshotEntryTable(), e);
+		}
+	}
+
+	private boolean testExists(String tableName, Connection conn) {
+		try {
+			PreparedStatement ps = conn.prepareStatement("SELECT 1 FROM " + tableName + " LIMIT 1");
+			ResultSet rs = ps.executeQuery();
+			if (rs.next()) {
+				rs.getString(1);
+			}
+			return true;
+		} catch (Exception e) {
+			return false;
 		}
 	}
 
