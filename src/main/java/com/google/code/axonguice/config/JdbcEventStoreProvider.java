@@ -29,6 +29,7 @@ import org.axonframework.common.jdbc.DataSourceConnectionProvider;
 import org.axonframework.common.jdbc.UnitOfWorkAwareConnectionProviderWrapper;
 import org.axonframework.eventstore.SnapshotEventStore;
 import org.axonframework.eventstore.jdbc.DefaultEventEntryStore;
+import org.axonframework.eventstore.jdbc.EventSqlSchema;
 import org.axonframework.eventstore.jdbc.GenericEventSqlSchema;
 import org.axonframework.eventstore.jdbc.JdbcEventStore;
 import org.axonframework.eventstore.jdbc.SchemaConfiguration;
@@ -54,20 +55,28 @@ public abstract class JdbcEventStoreProvider implements Provider<SnapshotEventSt
 
 	protected abstract AxonConfig getAxonConfig();
 
-	final SchemaConfiguration schemaConfig = new SchemaConfiguration();
+	protected SchemaConfiguration getSchemaConfiguration() {
+		return new SchemaConfiguration();
+	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	final GenericEventSqlSchema schema = new GenericEventSqlSchema((Class<?>) byte[].class, schemaConfig);
+	protected EventSqlSchema getEventSqlSchema(SchemaConfiguration config) {
+		return new GenericEventSqlSchema((Class<?>) byte[].class, config);
+	}
 
 	@SuppressWarnings("rawtypes")
 	@Override
 	public SnapshotEventStore get() {
+
+		SchemaConfiguration config = getSchemaConfiguration();
+		EventSqlSchema schema = getEventSqlSchema(config);
+
 		DataSource ds = getDataSource();
 		Connection conn = null;
 		try {
 			conn = ds.getConnection();
-			tryCreateDomainEventEntryTable(schema, conn);
-			tryCreateSnapshotEventEntryTable(schema, conn);
+			tryCreateDomainEventEntryTable(schema, config, conn);
+			tryCreateSnapshotEventEntryTable(schema, config, conn);
 		} catch (Exception e) {
 			logger.error("Error Initializing Event Store Tables", e);
 		} finally {
@@ -99,24 +108,24 @@ public abstract class JdbcEventStoreProvider implements Provider<SnapshotEventSt
 	}
 
 	@SuppressWarnings("rawtypes")
-	private void tryCreateDomainEventEntryTable(GenericEventSqlSchema schema, Connection conn) {
+	private void tryCreateDomainEventEntryTable(EventSqlSchema schema, SchemaConfiguration config, Connection conn) {
 		try {
-			if (!testExists(schemaConfig.domainEventEntryTable(), conn)) {
+			if (!testExists(config.domainEventEntryTable(), conn)) {
 				schema.sql_createDomainEventEntryTable(conn).execute();
 			}
 		} catch (Exception e) {
-			logger.error("Error Creating Table " + schemaConfig.domainEventEntryTable(), e);
+			logger.error("Error Creating Table " + config.domainEventEntryTable(), e);
 		}
 	}
 
 	@SuppressWarnings("rawtypes")
-	private void tryCreateSnapshotEventEntryTable(GenericEventSqlSchema schema, Connection conn) {
+	private void tryCreateSnapshotEventEntryTable(EventSqlSchema schema, SchemaConfiguration config, Connection conn) {
 		try {
-			if (!testExists(schemaConfig.snapshotEntryTable(), conn)) {
+			if (!testExists(config.snapshotEntryTable(), conn)) {
 				schema.sql_createSnapshotEventEntryTable(conn).execute();
 			}
 		} catch (Exception e) {
-			logger.error("Error Creating Table " + schemaConfig.snapshotEntryTable(), e);
+			logger.error("Error Creating Table " + config.snapshotEntryTable(), e);
 		}
 	}
 
