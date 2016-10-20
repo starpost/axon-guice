@@ -10,12 +10,12 @@ import org.axonframework.eventstore.jdbc.SchemaConfiguration;
 
 /**
  * SQL schema supporting MySQL databases.
- * <p/>
+ * <p>
  * The difference to the GenericEventSqlSchema is the use of mysql'
  * <code>longblob</code> data type for storing the serialized payload and
  * metaData.
  *
- * <p/>
+ * <p>
  * Adapted from PostgresEventSqlSchema
  * 
  * @author Jochen Munz
