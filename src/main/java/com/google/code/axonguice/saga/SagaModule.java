@@ -114,7 +114,8 @@ public class SagaModule extends AbstractClassesGroupingModule<AbstractAnnotatedS
                 logger.info(String.format("\tFound: [%s]", sagaClass.getName()));
             }
 
-            AnnotatedSagaManagerProvider annotatedSagaManagerProvider = new AnnotatedSagaManagerProvider(sagaClasses);
+			AnnotatedSagaManagerProvider annotatedSagaManagerProvider = new AnnotatedSagaManagerProvider(async,
+					processorCount, sagaClasses);
             requestInjection(annotatedSagaManagerProvider);
             bind(SagaManager.class).toProvider(annotatedSagaManagerProvider).asEagerSingleton();
         } else {
