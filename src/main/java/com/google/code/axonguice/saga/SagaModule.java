@@ -41,11 +41,21 @@ import java.util.Collection;
  */
 public class SagaModule extends AbstractClassesGroupingModule<AbstractAnnotatedSaga> {
 
+	boolean async = false;
+	int processorCount = 1;
+
 	/*===========================================[ CONSTRUCTORS ]=================*/
 
     @SafeVarargs
     public SagaModule(Class<? extends AbstractAnnotatedSaga>... classes) {
+        this(false, 1, classes);
+    }
+
+    @SafeVarargs
+    public SagaModule(boolean async, int processorCount, Class<? extends AbstractAnnotatedSaga>... classes) {
         super(classes);
+        this.async = async;
+        this.processorCount = processorCount;
     }
 
     public SagaModule(Collection<ClassesSearchGroup> sagasClassesSearchGroups) {

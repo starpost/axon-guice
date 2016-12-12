@@ -113,7 +113,7 @@ public class SimpleAxonGuiceModule extends AxonGuiceModule {
 
 	@Override
 	protected SagaModule createSagaModule() {
-		return new SagaModule(config.getSagaClassesAsArray());
+		return new SagaModule(config.isAsyncSagaManager(), config.getProcessorCount(), config.getSagaClassesAsArray());
 	}
 
 	@Override

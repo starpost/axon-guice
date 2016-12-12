@@ -18,17 +18,20 @@
 
 package com.google.code.axonguice.saga;
 
-import com.google.inject.Injector;
-import com.google.inject.Provider;
+import java.util.Collection;
+
+import javax.inject.Inject;
+
 import org.axonframework.eventhandling.EventBus;
 import org.axonframework.saga.SagaFactory;
 import org.axonframework.saga.SagaManager;
 import org.axonframework.saga.SagaRepository;
 import org.axonframework.saga.annotation.AbstractAnnotatedSaga;
 import org.axonframework.saga.annotation.AnnotatedSagaManager;
+import org.axonframework.saga.annotation.AsyncAnnotatedSagaManager;
 
-import javax.inject.Inject;
-import java.util.Collection;
+import com.google.inject.Injector;
+import com.google.inject.Provider;
 
 /**
  * Provides {@link AnnotatedSagaManager} as {@link SagaManager} implementation.
@@ -46,12 +49,21 @@ public class AnnotatedSagaManagerProvider implements Provider<SagaManager> {
     protected EventBus eventBus;
     protected SagaFactory sagaFactory;
     protected Class<? extends AbstractAnnotatedSaga>[] sagaClasses;
-
+    protected boolean async = false;
+    protected int processorCount = 10;
+    
 	/*===========================================[ CONSTRUCTORS ]=================*/
 
     public AnnotatedSagaManagerProvider(Collection<Class<? extends AbstractAnnotatedSaga>> sagaClasses) {
-        this.sagaClasses = sagaClasses.toArray(new Class[sagaClasses.size()]);
+        this(false, 1, sagaClasses);
     }
+
+	public AnnotatedSagaManagerProvider(boolean async, int processorCount,
+			Collection<Class<? extends AbstractAnnotatedSaga>> sagaClasses) {
+		this.sagaClasses = sagaClasses.toArray(new Class[sagaClasses.size()]);
+		this.async = async;
+		this.processorCount = processorCount;
+	}
 
     @Inject
     void init(Injector injector, SagaRepository sagaRepository, EventBus eventBus, SagaFactory sagaFactory) {
@@ -64,11 +76,24 @@ public class AnnotatedSagaManagerProvider implements Provider<SagaManager> {
 	/*===========================================[ INTERFACE METHODS ]============*/
 
     @Override
-    public SagaManager get() {
-        AnnotatedSagaManager annotatedSagaManager = new AnnotatedSagaManager(sagaRepository, sagaFactory, sagaClasses);
-        // support for SagaManager @PostConstruct
-        injector.injectMembers(annotatedSagaManager);
-        eventBus.subscribe(annotatedSagaManager);
-        return annotatedSagaManager;
-    }
+	public SagaManager get() {
+		SagaManager annotatedSagaManager = createSagaManager();
+		// support for SagaManager @PostConstruct
+		injector.injectMembers(annotatedSagaManager);
+		eventBus.subscribe(annotatedSagaManager);
+		return annotatedSagaManager;
+	}
+
+	private SagaManager createSagaManager() {
+		if (async) {
+			AsyncAnnotatedSagaManager annotatedSagaManager = new AsyncAnnotatedSagaManager(sagaClasses);
+			annotatedSagaManager.setSagaRepository(sagaRepository);
+			annotatedSagaManager.setSagaFactory(sagaFactory);
+			annotatedSagaManager.setProcessorCount(processorCount);
+			annotatedSagaManager.start();
+			return annotatedSagaManager;
+		} else {
+			return new AnnotatedSagaManager(sagaRepository, sagaFactory, sagaClasses);
+		}
+	}
 }

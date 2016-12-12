@@ -44,6 +44,8 @@ public class AxonConfig {
 	final Set<Class<? extends Converter>> converters;
 	final Class<? extends Provider<? extends EventStore>> eventStoreProviderClass;
 	final Class<? extends Provider<? extends SnapshotEventStore>> snapshotEventStoreProviderClass;
+	final boolean asyncSagaManager;
+	final int processorCount;
 
 	public AxonConfig(Set<Class<? extends EventSourcedAggregateRoot<?>>> aggregateClasses,
 			Set<Class<?>> commandHandlerClasses, //
@@ -52,7 +54,7 @@ public class AxonConfig {
 			Set<Class<?>> commandGatewayClasses, //
 			Class<? extends Provider<? extends EventStore>> eventStoreProviderClass, //
 			Class<? extends Provider<? extends SnapshotEventStore>> snapshotEventStoreProviderClass, //
-			Set<Class<? extends Converter>> converters) {
+			Set<Class<? extends Converter>> converters, boolean asyncSagaManager, int processorCount) {
 		super();
 		this.aggregateClasses = aggregateClasses;
 		this.commandHandlerClasses = commandHandlerClasses;
@@ -68,6 +70,8 @@ public class AxonConfig {
 		this.eventStoreProviderClass = eventStoreProviderClass;
 		this.snapshotEventStoreProviderClass = snapshotEventStoreProviderClass;
 		this.converters = converters;
+		this.asyncSagaManager = asyncSagaManager;
+		this.processorCount = processorCount;
 	}
 
 	public Set<Class<? extends EventSourcedAggregateRoot<?>>> getAggregateClasses() {
@@ -122,6 +126,14 @@ public class AxonConfig {
 
 	public Class<? extends Provider<? extends SnapshotEventStore>> getSnapshotEventStorePoviderClass() {
 		return snapshotEventStoreProviderClass;
+	}
+
+	public boolean isAsyncSagaManager() {
+		return asyncSagaManager;
+	}
+
+	public int getProcessorCount() {
+		return processorCount;
 	}
 
 }

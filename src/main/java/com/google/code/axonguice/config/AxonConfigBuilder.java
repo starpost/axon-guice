@@ -45,6 +45,9 @@ public class AxonConfigBuilder {
 	Class<? extends Provider<? extends EventStore>> eventStoreProviderClass;
 	Class<? extends Provider<? extends SnapshotEventStore>> snapshotEventStoreProviderClass;
 
+	boolean asyncSagaManager = false;
+	int processorCount = 1;
+
 	public AxonConfigBuilder withAggregate(Class<? extends EventSourcedAggregateRoot<?>> aggregateClass) {
 		aggregateClasses.add(aggregateClass);
 		return this;
@@ -112,9 +115,20 @@ public class AxonConfigBuilder {
 		return this;
 	}
 
+	public AxonConfigBuilder asyncSagaManager(boolean async) {
+		this.asyncSagaManager = async;
+		return this;
+	}
+
+	public AxonConfigBuilder processorCount(int processorCount) {
+		this.processorCount = processorCount;
+		return this;
+	}
+
 	public AxonConfig build() {
 		return new AxonConfig(aggregateClasses, commandHandlerClasses, eventHandlerClasses, sagaClasses,
-				commandGatewayClasses, eventStoreProviderClass, snapshotEventStoreProviderClass, converterClasses);
+				commandGatewayClasses, eventStoreProviderClass, snapshotEventStoreProviderClass, converterClasses,
+				asyncSagaManager, processorCount);
 	}
 
 	public static AxonConfigBuilder create() {
