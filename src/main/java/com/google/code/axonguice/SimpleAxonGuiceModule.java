@@ -18,12 +18,9 @@
  */
 package com.google.code.axonguice;
 
-import java.util.Set;
-
 import javax.inject.Singleton;
 
 import org.axonframework.commandhandling.gateway.GatewayProxyFactory;
-import org.axonframework.eventsourcing.EventSourcedAggregateRoot;
 import org.axonframework.eventstore.EventStore;
 import org.axonframework.eventstore.SnapshotEventStore;
 
@@ -40,7 +37,6 @@ import com.google.code.axonguice.eventhandling.EventHandlingModule;
 import com.google.code.axonguice.repository.RepositoryModule;
 import com.google.code.axonguice.repository.eventsourcing.EventSourcedRepositoryModule;
 import com.google.code.axonguice.saga.SagaModule;
-import com.google.common.collect.FluentIterable;
 import com.google.inject.Scopes;
 
 /**
