@@ -26,6 +26,8 @@ import org.axonframework.eventstore.SnapshotEventStore;
 
 import com.google.code.axonguice.commandhandling.AggregateRootCommandHandlingModule;
 import com.google.code.axonguice.commandhandling.CommandHandlingModule;
+import com.google.code.axonguice.commandhandling.DisruptorCommandBusCommandHandlingModule;
+import com.google.code.axonguice.commandhandling.SimpleCommandBusCommandHandlingModule;
 import com.google.code.axonguice.config.AxonConfig;
 import com.google.code.axonguice.config.CustomCommandGatewayProvider;
 import com.google.code.axonguice.config.GatewayProxyFactoryProvider;
@@ -82,23 +84,43 @@ public class SimpleAxonGuiceModule extends AxonGuiceModule {
 
 	@Override
 	protected CommandHandlingModule createCommandHandlingModule() {
-		return new CommandHandlingModule(config.getCommandHandlerClassesAsArray()) {
-			/**
-			 * 此为绑定定制化的Command Gateway
-			 */
-			@Override
-			@SuppressWarnings({ "rawtypes", "unchecked" })
-			protected void configure() {
-				super.configure();
-				// 统一提供一个GatewayProxyFactory
-				bind(GatewayProxyFactory.class).toProvider(GatewayProxyFactoryProvider.class).in(Singleton.class);
-				for (Class<?> gatewayClass : config.getCommandGatewayClasses()) {
-					CustomCommandGatewayProvider p = new CustomCommandGatewayProvider(gatewayClass);
-					requestInjection(p);
-					bind(gatewayClass).toProvider(p).in(Singleton.class);
+		if (config.isUseDisruptorCommandBus()) {
+			return new DisruptorCommandBusCommandHandlingModule(config.getCommandHandlerClassesAsArray()) {
+				/**
+				 * 此为绑定定制化的Command Gateway
+				 */
+				@Override
+				@SuppressWarnings({ "rawtypes", "unchecked" })
+				protected void configure() {
+					super.configure();
+					// 统一提供一个GatewayProxyFactory
+					bind(GatewayProxyFactory.class).toProvider(GatewayProxyFactoryProvider.class).in(Singleton.class);
+					for (Class<?> gatewayClass : config.getCommandGatewayClasses()) {
+						CustomCommandGatewayProvider p = new CustomCommandGatewayProvider(gatewayClass);
+						requestInjection(p);
+						bind(gatewayClass).toProvider(p).in(Singleton.class);
+					}
 				}
-			}
-		};
+			};
+		} else {
+			return new SimpleCommandBusCommandHandlingModule(config.getCommandHandlerClassesAsArray()) {
+				/**
+				 * 此为绑定定制化的Command Gateway
+				 */
+				@Override
+				@SuppressWarnings({ "rawtypes", "unchecked" })
+				protected void configure() {
+					super.configure();
+					// 统一提供一个GatewayProxyFactory
+					bind(GatewayProxyFactory.class).toProvider(GatewayProxyFactoryProvider.class).in(Singleton.class);
+					for (Class<?> gatewayClass : config.getCommandGatewayClasses()) {
+						CustomCommandGatewayProvider p = new CustomCommandGatewayProvider(gatewayClass);
+						requestInjection(p);
+						bind(gatewayClass).toProvider(p).in(Singleton.class);
+					}
+				}
+			};
+		}
 	}
 
 	@Override

@@ -20,6 +20,7 @@ package com.google.code.axonguice;
 
 import com.google.code.axonguice.commandhandling.AggregateRootCommandHandlingModule;
 import com.google.code.axonguice.commandhandling.CommandHandlingModule;
+import com.google.code.axonguice.commandhandling.SimpleCommandBusCommandHandlingModule;
 import com.google.code.axonguice.commandhandling.SimpleCommandHandler;
 import com.google.code.axonguice.domain.DomainModule;
 import com.google.code.axonguice.domain.api.command.OrderCommandHandler;
@@ -52,7 +53,7 @@ public class AxonGuiceTestModule extends AxonGuiceModule {
 
     @Override
     protected CommandHandlingModule createCommandHandlingModule() {
-        return new CommandHandlingModule(SimpleCommandHandler.class, OrderCommandHandler.class);
+        return new SimpleCommandBusCommandHandlingModule(SimpleCommandHandler.class, OrderCommandHandler.class);
     }
 
     @Override

@@ -40,7 +40,7 @@ import java.util.Collection;
  * @see AxonGuiceModule#createCommandHandlingModule()
  * @since 06.02.13
  */
-public class CommandHandlingModule extends AbstractClassesGroupingModule<Object> {
+public abstract class CommandHandlingModule extends AbstractClassesGroupingModule<Object> {
 
 	/*===========================================[ CONSTRUCTORS ]=================*/
 
@@ -83,9 +83,7 @@ public class CommandHandlingModule extends AbstractClassesGroupingModule<Object>
         bindCommandHandlers();
     }
 
-    protected void bindCommandBus() {
-        bind(CommandBus.class).to(SimpleCommandBus.class).in(Scopes.SINGLETON);
-    }
+    protected abstract void bindCommandBus();
 
     protected void bindCommandGateway() {
         bind(CommandGateway.class).toProvider(DefaultCommandGatewayProvider.class).in(Scopes.SINGLETON);
@@ -114,4 +112,5 @@ public class CommandHandlingModule extends AbstractClassesGroupingModule<Object>
             bindCommandHandlers(classesGroup);
         }
     }
+    
 }

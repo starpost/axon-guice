@@ -47,6 +47,7 @@ public class AxonConfigBuilder {
 
 	boolean asyncSagaManager = false;
 	int processorCount = 1;
+	boolean useDisruptor = false;
 
 	public AxonConfigBuilder withAggregate(Class<? extends EventSourcedAggregateRoot<?>> aggregateClass) {
 		aggregateClasses.add(aggregateClass);
@@ -125,10 +126,15 @@ public class AxonConfigBuilder {
 		return this;
 	}
 
+	public AxonConfigBuilder useDisruptorCommandBus(boolean use) {
+		this.useDisruptor = use;
+		return this;
+	}
+
 	public AxonConfig build() {
 		return new AxonConfig(aggregateClasses, commandHandlerClasses, eventHandlerClasses, sagaClasses,
 				commandGatewayClasses, eventStoreProviderClass, snapshotEventStoreProviderClass, converterClasses,
-				asyncSagaManager, processorCount);
+				asyncSagaManager, processorCount, useDisruptor);
 	}
 
 	public static AxonConfigBuilder create() {

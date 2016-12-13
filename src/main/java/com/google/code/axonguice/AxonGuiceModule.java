@@ -18,8 +18,11 @@
 
 package com.google.code.axonguice;
 
+import java.util.Arrays;
+
 import com.google.code.axonguice.commandhandling.AggregateRootCommandHandlingModule;
 import com.google.code.axonguice.commandhandling.CommandHandlingModule;
+import com.google.code.axonguice.commandhandling.SimpleCommandBusCommandHandlingModule;
 import com.google.code.axonguice.common.ParameterResolverFactoryModule;
 import com.google.code.axonguice.domain.DomainModule;
 import com.google.code.axonguice.domain.eventsourcing.EventSourcedDomainModule;
@@ -29,8 +32,6 @@ import com.google.code.axonguice.repository.RepositoryModule;
 import com.google.code.axonguice.repository.eventsourcing.EventSourcedRepositoryModule;
 import com.google.code.axonguice.saga.SagaModule;
 import com.google.inject.AbstractModule;
-
-import java.util.Arrays;
 
 /**
  * Axon-Guice main integration module - it binds all Axon components into Guice context.
@@ -102,7 +103,7 @@ public class AxonGuiceModule extends AbstractModule {
     }
 
     protected CommandHandlingModule createCommandHandlingModule() {
-        return new CommandHandlingModule(packages);
+        return new SimpleCommandBusCommandHandlingModule(packages);
     }
 
     protected AggregateRootCommandHandlingModule createAggregateRootCommandHandlingModule() {
