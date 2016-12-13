@@ -18,9 +18,12 @@
  */
 package com.google.code.axonguice;
 
+import java.util.Set;
+
 import javax.inject.Singleton;
 
 import org.axonframework.commandhandling.gateway.GatewayProxyFactory;
+import org.axonframework.eventsourcing.EventSourcedAggregateRoot;
 import org.axonframework.eventstore.EventStore;
 import org.axonframework.eventstore.SnapshotEventStore;
 
@@ -37,6 +40,7 @@ import com.google.code.axonguice.eventhandling.EventHandlingModule;
 import com.google.code.axonguice.repository.RepositoryModule;
 import com.google.code.axonguice.repository.eventsourcing.EventSourcedRepositoryModule;
 import com.google.code.axonguice.saga.SagaModule;
+import com.google.common.collect.FluentIterable;
 import com.google.inject.Scopes;
 
 /**
@@ -54,13 +58,13 @@ public class SimpleAxonGuiceModule extends AxonGuiceModule {
 	@Override
 	@SuppressWarnings({ "rawtypes" })
 	protected DomainModule createDomainModule() {
-		return new EventSourcedDomainModule(config.getAggregateClassesAsArray());
+		return new EventSourcedDomainModule(config.getAllAggregateClassesAsArray());
 	}
 
 	@Override
 	@SuppressWarnings({ "rawtypes" })
 	protected RepositoryModule createRepositoryModule() {
-		return new EventSourcedRepositoryModule(config.getAggregateClassesAsArray()) {
+		EventSourcedRepositoryModule m = new EventSourcedRepositoryModule(config.getAggregateClassesAsArray()) {
 
 			@Override
 			protected void bindEventStore() {
@@ -80,6 +84,8 @@ public class SimpleAxonGuiceModule extends AxonGuiceModule {
 			}
 
 		};
+		m.setCachingClasses(config.getAggregateCachingClassesAsArray());
+		return m;
 	}
 
 	@Override
@@ -125,7 +131,7 @@ public class SimpleAxonGuiceModule extends AxonGuiceModule {
 
 	@Override
 	protected AggregateRootCommandHandlingModule createAggregateRootCommandHandlingModule() {
-		return new AggregateRootCommandHandlingModule(config.getAggregateClassesAsArray());
+		return new AggregateRootCommandHandlingModule(config.getAllAggregateClassesAsArray());
 	}
 
 	@Override

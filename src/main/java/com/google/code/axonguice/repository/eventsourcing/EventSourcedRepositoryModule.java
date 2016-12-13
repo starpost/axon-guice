@@ -18,6 +18,15 @@
 
 package com.google.code.axonguice.repository.eventsourcing;
 
+import java.util.Collection;
+
+import org.axonframework.eventsourcing.EventSourcedAggregateRoot;
+import org.axonframework.eventsourcing.SnapshotterTrigger;
+import org.axonframework.eventstore.EventStore;
+import org.axonframework.eventstore.SnapshotEventStore;
+import org.axonframework.eventstore.fs.FileSystemEventStore;
+import org.axonframework.repository.Repository;
+
 import com.google.code.axonguice.grouping.ClassesSearchGroup;
 import com.google.code.axonguice.repository.RepositoryModule;
 import com.google.inject.Key;
@@ -26,14 +35,6 @@ import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 import com.google.inject.util.Types;
-import org.axonframework.eventsourcing.EventSourcedAggregateRoot;
-import org.axonframework.eventsourcing.SnapshotterTrigger;
-import org.axonframework.eventstore.EventStore;
-import org.axonframework.eventstore.SnapshotEventStore;
-import org.axonframework.eventstore.fs.FileSystemEventStore;
-import org.axonframework.repository.Repository;
-
-import java.util.Collection;
 
 /**
  * Implementation of {@link RepositoryModule} related to Event Sourcing. Default EventStore/SnapshotEventStore is
@@ -61,7 +62,7 @@ public class EventSourcedRepositoryModule extends RepositoryModule<EventSourcedA
 
     /*===========================================[ CLASS METHODS ]================*/
 
-    @Override
+	@Override
     protected void configure() {
         bindEventStore();
         bindSnaphotEventStore();
@@ -88,10 +89,20 @@ public class EventSourcedRepositoryModule extends RepositoryModule<EventSourcedA
         logger.info(String.format("\t\tRepository set to: [%s]", repositoryProvider.getClass().getName()));
     }
 
-    protected void bindSnapshotterTrigger(Class<? extends EventSourcedAggregateRoot> aggregateRootClass) {
+	@Override
+	protected void bindCachingRepository(Class<? extends EventSourcedAggregateRoot> aggregateRootClass) {
+        bindSnapshotterTrigger(aggregateRootClass);
+        Provider repositoryProvider = new CachingEventSourcingRepositoryProvider(aggregateRootClass);
+        requestInjection(repositoryProvider);
+        bind(Key.get(TypeLiteral.get(Types.newParameterizedType(Repository.class, aggregateRootClass)))).toProvider(repositoryProvider).in(Scopes.SINGLETON);
+        logger.info(String.format("\t\tCaching Repository set to: [%s]", repositoryProvider.getClass().getName()));
+	}
+
+	protected void bindSnapshotterTrigger(Class<? extends EventSourcedAggregateRoot> aggregateRootClass) {
         Provider snapshotterTriggerProvider = new EventCountSnapshotterTriggerProvider(aggregateRootClass);
         requestInjection(snapshotterTriggerProvider);
         bind(Key.get(SnapshotterTrigger.class, Names.named(aggregateRootClass.getName()))).toProvider(snapshotterTriggerProvider).in(Scopes.SINGLETON);
         logger.info(String.format("\t\tSnapshotterTrigger set to: [%s]", snapshotterTriggerProvider.getClass().getName()));
     }
+
 }

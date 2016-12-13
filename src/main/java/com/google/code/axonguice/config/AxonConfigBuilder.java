@@ -37,6 +37,7 @@ import com.thoughtworks.xstream.converters.Converter;
 public class AxonConfigBuilder {
 
 	Set<Class<? extends EventSourcedAggregateRoot<?>>> aggregateClasses = Sets.newHashSet();
+	Set<Class<? extends EventSourcedAggregateRoot<?>>> aggregateCachingClasses = Sets.newHashSet();
 	Set<Class<?>> commandHandlerClasses = Sets.newHashSet();
 	Set<Class<?>> eventHandlerClasses = Sets.newHashSet();
 	Set<Class<? extends AbstractAnnotatedSaga>> sagaClasses = Sets.newHashSet();
@@ -50,7 +51,17 @@ public class AxonConfigBuilder {
 	boolean useDisruptor = false;
 
 	public AxonConfigBuilder withAggregate(Class<? extends EventSourcedAggregateRoot<?>> aggregateClass) {
-		aggregateClasses.add(aggregateClass);
+		withAggregate(aggregateClass, false);
+		return this;
+	}
+
+	public AxonConfigBuilder withAggregate(Class<? extends EventSourcedAggregateRoot<?>> aggregateClass,
+			boolean caching) {
+		if (caching) {
+			aggregateCachingClasses.add(aggregateClass);
+		} else {
+			aggregateClasses.add(aggregateClass);
+		}
 		return this;
 	}
 
@@ -132,9 +143,9 @@ public class AxonConfigBuilder {
 	}
 
 	public AxonConfig build() {
-		return new AxonConfig(aggregateClasses, commandHandlerClasses, eventHandlerClasses, sagaClasses,
-				commandGatewayClasses, eventStoreProviderClass, snapshotEventStoreProviderClass, converterClasses,
-				asyncSagaManager, processorCount, useDisruptor);
+		return new AxonConfig(aggregateClasses, aggregateCachingClasses, commandHandlerClasses, eventHandlerClasses,
+				sagaClasses, commandGatewayClasses, eventStoreProviderClass, snapshotEventStoreProviderClass,
+				converterClasses, asyncSagaManager, processorCount, useDisruptor);
 	}
 
 	public static AxonConfigBuilder create() {

@@ -18,14 +18,17 @@
 
 package com.google.code.axonguice.repository;
 
+import java.util.Collection;
+import java.util.Set;
+
+import org.axonframework.domain.AggregateRoot;
+import org.reflections.Reflections;
+
 import com.google.code.axonguice.AxonGuiceModule;
 import com.google.code.axonguice.grouping.AbstractClassesGroupingModule;
 import com.google.code.axonguice.grouping.ClassesSearchGroup;
 import com.google.code.axonguice.util.ReflectionsHelper;
-import org.axonframework.domain.AggregateRoot;
-import org.reflections.Reflections;
-
-import java.util.Collection;
+import com.google.common.collect.Sets;
 
 /**
  * Registers all Aggregate Roots repositories and all related components.
@@ -36,7 +39,9 @@ import java.util.Collection;
  */
 public abstract class RepositoryModule<T extends AggregateRoot> extends AbstractClassesGroupingModule<T> {
 
-    /*===========================================[ CONSTRUCTORS ]=================*/
+    private Set<Class<? extends T>> cachingClasses = Sets.newHashSet();
+
+	/*===========================================[ CONSTRUCTORS ]=================*/
 
     @SafeVarargs
     protected RepositoryModule(Class<? extends T>... classes) {
@@ -58,6 +63,10 @@ public abstract class RepositoryModule<T extends AggregateRoot> extends Abstract
         bindRepositories();
     }
 
+	public void setCachingClasses(Class<? extends T>... cachingClasses) {
+		this.cachingClasses = Sets.newHashSet(cachingClasses);
+	}
+
     protected void bindRepositories() {
         logger.info("Binding EventSourced Aggregate Roots Repositories");
         if (classesGroup.isEmpty()) {
@@ -74,6 +83,10 @@ public abstract class RepositoryModule<T extends AggregateRoot> extends Abstract
         } else {
             bindRepositories(classesGroup);
         }
+        logger.info("Binding Cached EventSourced Aggregate Roots Repositories");
+        if (cachingClasses != null && !cachingClasses.isEmpty()) {
+        	bindCachingRepositories(cachingClasses);
+        }
     }
 
     protected void bindRepositories(Iterable<Class<? extends T>> aggregateRoots) {
@@ -83,5 +96,14 @@ public abstract class RepositoryModule<T extends AggregateRoot> extends Abstract
         }
     }
 
-    protected abstract void bindRepository(Class<? extends T> aggregateRootClass);
+    protected void bindCachingRepositories(Iterable<Class<? extends T>> aggregateRoots) {
+        for (Class<? extends T> aggregateRootClass : aggregateRoots) {
+            logger.info(String.format("\tFound: [%s]", aggregateRootClass.getName()));
+            bindCachingRepository(aggregateRootClass);
+        }
+    }
+
+	protected abstract void bindRepository(Class<? extends T> aggregateRootClass);
+
+	protected abstract void bindCachingRepository(Class<? extends T> aggregateRootClass);
 }

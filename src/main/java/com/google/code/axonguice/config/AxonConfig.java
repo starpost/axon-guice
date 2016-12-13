@@ -37,6 +37,7 @@ import com.thoughtworks.xstream.converters.Converter;
 public class AxonConfig {
 
 	final Set<Class<? extends EventSourcedAggregateRoot<?>>> aggregateClasses;
+	final Set<Class<? extends EventSourcedAggregateRoot<?>>> aggregateCachingClasses;
 	final Set<Class<?>> commandHandlerClasses;
 	final Set<Class<?>> eventHandlerClasses;
 	final Set<Class<? extends AbstractAnnotatedSaga>> sagaClasses;
@@ -49,6 +50,7 @@ public class AxonConfig {
 	final boolean useDisruptorCommandBus;
 
 	public AxonConfig(Set<Class<? extends EventSourcedAggregateRoot<?>>> aggregateClasses,
+			Set<Class<? extends EventSourcedAggregateRoot<?>>> aggregateCachingClasses,
 			Set<Class<?>> commandHandlerClasses, //
 			Set<Class<?>> eventHandlerClasses, //
 			Set<Class<? extends AbstractAnnotatedSaga>> sagaClasses, //
@@ -59,6 +61,7 @@ public class AxonConfig {
 			boolean useDisruptorCommandBus) {
 		super();
 		this.aggregateClasses = aggregateClasses;
+		this.aggregateCachingClasses = aggregateCachingClasses;
 		this.commandHandlerClasses = commandHandlerClasses;
 		this.eventHandlerClasses = eventHandlerClasses;
 		this.sagaClasses = sagaClasses;
@@ -84,6 +87,24 @@ public class AxonConfig {
 	@SuppressWarnings("unchecked")
 	public Class<? extends EventSourcedAggregateRoot<?>>[] getAggregateClassesAsArray() {
 		return FluentIterable.from(aggregateClasses).toList().toArray(new Class[0]);
+	}
+
+	public Set<Class<? extends EventSourcedAggregateRoot<?>>> getAggregateCachingClasses() {
+		return aggregateCachingClasses;
+	}
+
+	@SuppressWarnings("unchecked")
+	public Class<? extends EventSourcedAggregateRoot<?>>[] getAggregateCachingClassesAsArray() {
+		return FluentIterable.from(aggregateCachingClasses).toList().toArray(new Class[0]);
+	}
+
+	/**
+	 * Caching and non-caching aggregate roots are returned
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public Class<? extends EventSourcedAggregateRoot<?>>[] getAllAggregateClassesAsArray() {
+		return FluentIterable.from(aggregateClasses).append(aggregateCachingClasses).toList().toArray(new Class[0]);
 	}
 
 	public Set<Class<?>> getCommandHandlerClasses() {
