@@ -18,19 +18,31 @@
 
 package com.google.code.axonguice.eventhandling;
 
+import java.util.Collection;
+import java.util.concurrent.Executors;
+
+import org.axonframework.eventhandling.AnnotationClusterSelector;
+import org.axonframework.eventhandling.Cluster;
+import org.axonframework.eventhandling.ClusterSelector;
+import org.axonframework.eventhandling.ClusteringEventBus;
+import org.axonframework.eventhandling.CompositeClusterSelector;
+import org.axonframework.eventhandling.DefaultClusterSelector;
+import org.axonframework.eventhandling.EventBus;
+import org.axonframework.eventhandling.SimpleCluster;
+import org.axonframework.eventhandling.async.AsynchronousCluster;
+import org.axonframework.eventhandling.async.FullConcurrencyPolicy;
+import org.axonframework.eventhandling.async.SequencingPolicy;
+import org.axonframework.eventhandling.scheduling.EventScheduler;
+import org.reflections.Reflections;
+
 import com.google.code.axonguice.AxonGuiceModule;
 import com.google.code.axonguice.eventhandling.annotation.EventHandlerComponent;
 import com.google.code.axonguice.eventhandling.scheduling.SimpleEventSchedulerProvider;
 import com.google.code.axonguice.grouping.AbstractClassesGroupingModule;
 import com.google.code.axonguice.grouping.ClassesSearchGroup;
+import com.google.common.collect.Lists;
 import com.google.inject.Provider;
 import com.google.inject.Scopes;
-import org.axonframework.eventhandling.EventBus;
-import org.axonframework.eventhandling.SimpleEventBus;
-import org.axonframework.eventhandling.scheduling.EventScheduler;
-import org.reflections.Reflections;
-
-import java.util.Collection;
 
 /**
  * Registers all event handling required components plus event handlers as EventBus subscribers.
@@ -65,7 +77,18 @@ public class EventHandlingModule extends AbstractClassesGroupingModule<Object> {
     }
 
     protected void bindEventBus() {
-        bind(EventBus.class).to(SimpleEventBus.class).in(Scopes.SINGLETON);
+        Cluster defaultCluster = new SimpleCluster("default");
+        
+		Cluster backgroundCluster = new AsynchronousCluster("background", Executors.newCachedThreadPool(),
+				new FullConcurrencyPolicy());
+
+        DefaultClusterSelector defaultGroup = new DefaultClusterSelector(defaultCluster);
+    	AnnotationClusterSelector bgGroup = new AnnotationClusterSelector(AsyncEventHandler.class, backgroundCluster);
+    	
+    	ClusterSelector selector = new CompositeClusterSelector(Lists.newArrayList(bgGroup, defaultGroup));
+    	ClusteringEventBus bus = new ClusteringEventBus(selector);
+    	bind(EventBus.class).toInstance(bus);
+//        bind(EventBus.class).to(SimpleEventBus.class).in(Scopes.SINGLETON);
     }
 
     protected void bindEventHandlers() {
