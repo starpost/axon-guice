@@ -27,6 +27,7 @@ import org.axonframework.eventsourcing.CachingEventSourcingRepository;
 import org.axonframework.eventsourcing.EventSourcingRepository;
 import org.axonframework.eventsourcing.SnapshotterTrigger;
 import org.axonframework.eventstore.EventStore;
+import org.axonframework.repository.OptimisticLockManager;
 import org.axonframework.repository.Repository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,16 +89,17 @@ public class CachingEventSourcingRepositoryProvider extends RepositoryProvider {
     /*===========================================[ INTERFACE METHODS ]============*/
 
     @Override
-    public Repository get() {
-        EventSourcingRepository repository = new CachingEventSourcingRepository(aggregateFactoryProvider.get(), eventStore);
-        repository.setEventBus(eventBus);
+	public Repository get() {
+		EventSourcingRepository repository = new CachingEventSourcingRepository(aggregateFactoryProvider.get(),
+				eventStore, new OptimisticLockManager());
+		repository.setEventBus(eventBus);
 
-        if (snapshotterTriggerProvider != null) {
-            SnapshotterTrigger snapshotterTrigger = snapshotterTriggerProvider.get();
-            if (snapshotterTrigger != null) {
-                repository.setSnapshotterTrigger(snapshotterTrigger);
-            }
-        }
-        return repository;
-    }
+		if (snapshotterTriggerProvider != null) {
+			SnapshotterTrigger snapshotterTrigger = snapshotterTriggerProvider.get();
+			if (snapshotterTrigger != null) {
+				repository.setSnapshotterTrigger(snapshotterTrigger);
+			}
+		}
+		return repository;
+	}
 }
