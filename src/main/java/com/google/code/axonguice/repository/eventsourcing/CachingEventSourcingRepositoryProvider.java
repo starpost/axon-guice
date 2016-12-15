@@ -91,7 +91,7 @@ public class CachingEventSourcingRepositoryProvider extends RepositoryProvider {
     @Override
 	public Repository get() {
 		EventSourcingRepository repository = new CachingEventSourcingRepository(aggregateFactoryProvider.get(),
-				eventStore, new OptimisticLockManager());
+				eventStore /*new OptimisticLockManager()*/);
 		repository.setEventBus(eventBus);
 
 		if (snapshotterTriggerProvider != null) {
