@@ -27,6 +27,7 @@ import org.axonframework.eventsourcing.CachingEventSourcingRepository;
 import org.axonframework.eventsourcing.EventSourcingRepository;
 import org.axonframework.eventsourcing.SnapshotterTrigger;
 import org.axonframework.eventstore.EventStore;
+import org.axonframework.repository.NullLockManager;
 import org.axonframework.repository.Repository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,8 +95,9 @@ public class CachingEventSourcingRepositoryProvider extends RepositoryProvider {
     @Override
 	public Repository get() {
 		CachingEventSourcingRepository repository = new CachingEventSourcingRepository(aggregateFactoryProvider.get(),
-				eventStore);
+				eventStore, new NullLockManager());
 		repository.setCache(new GuavaCache(cacheDuration.getTime(), cacheDuration.getUnit()));
+//		repository.setCache(new WeakReferenceCache());
 		repository.setEventBus(eventBus);
 
 		if (snapshotterTriggerProvider != null) {
