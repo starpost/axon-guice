@@ -27,11 +27,11 @@ import org.axonframework.eventsourcing.CachingEventSourcingRepository;
 import org.axonframework.eventsourcing.EventSourcingRepository;
 import org.axonframework.eventsourcing.SnapshotterTrigger;
 import org.axonframework.eventstore.EventStore;
-import org.axonframework.repository.OptimisticLockManager;
 import org.axonframework.repository.Repository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.code.axonguice.config.Duration;
 import com.google.code.axonguice.repository.RepositoryProvider;
 import com.google.inject.ConfigurationException;
 import com.google.inject.Injector;
@@ -60,12 +60,15 @@ public class CachingEventSourcingRepositoryProvider extends RepositoryProvider {
     protected EventStore eventStore;
     protected Provider<SnapshotterTrigger> snapshotterTriggerProvider;
     protected Provider<AggregateFactory> aggregateFactoryProvider;
+    protected Duration cacheDuration;
 
     /*===========================================[ CONSTRUCTORS ]=================*/
 
-    public CachingEventSourcingRepositoryProvider(Class<? extends AggregateRoot> aggregateRootClass) {
-        super(aggregateRootClass);
-    }
+	public CachingEventSourcingRepositoryProvider(Class<? extends AggregateRoot> aggregateRootClass,
+			Duration duration) {
+		super(aggregateRootClass);
+		this.cacheDuration = duration;
+	}
 
     @Inject
     void init(EventBus eventBus,
@@ -90,8 +93,9 @@ public class CachingEventSourcingRepositoryProvider extends RepositoryProvider {
 
     @Override
 	public Repository get() {
-		EventSourcingRepository repository = new CachingEventSourcingRepository(aggregateFactoryProvider.get(),
-				eventStore /*new OptimisticLockManager()*/);
+		CachingEventSourcingRepository repository = new CachingEventSourcingRepository(aggregateFactoryProvider.get(),
+				eventStore);
+		repository.setCache(new GuavaCache(cacheDuration.getTime(), cacheDuration.getUnit()));
 		repository.setEventBus(eventBus);
 
 		if (snapshotterTriggerProvider != null) {

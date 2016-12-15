@@ -80,7 +80,7 @@ public class SimpleAxonGuiceModule extends AxonGuiceModule {
 			}
 
 		};
-		m.setCachingClasses(config.getAggregateCachingClassesAsArray());
+		m.setCachingClasses(config.getAggregateCachingClasses());
 		return m;
 	}
 

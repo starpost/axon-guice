@@ -18,6 +18,7 @@
  */
 package com.google.code.axonguice.config;
 
+import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Provider;
@@ -37,7 +38,7 @@ import com.thoughtworks.xstream.converters.Converter;
 public class AxonConfig {
 
 	final Set<Class<? extends EventSourcedAggregateRoot<?>>> aggregateClasses;
-	final Set<Class<? extends EventSourcedAggregateRoot<?>>> aggregateCachingClasses;
+	final Map<Class<? extends EventSourcedAggregateRoot<?>>, Duration> aggregateCachingClassesMap;
 	final Set<Class<?>> commandHandlerClasses;
 	final Set<Class<?>> eventHandlerClasses;
 	final Set<Class<? extends AbstractAnnotatedSaga>> sagaClasses;
@@ -50,7 +51,7 @@ public class AxonConfig {
 	final boolean useDisruptorCommandBus;
 
 	public AxonConfig(Set<Class<? extends EventSourcedAggregateRoot<?>>> aggregateClasses,
-			Set<Class<? extends EventSourcedAggregateRoot<?>>> aggregateCachingClasses,
+			Map<Class<? extends EventSourcedAggregateRoot<?>>, Duration> aggregateCachingClassesMap,
 			Set<Class<?>> commandHandlerClasses, //
 			Set<Class<?>> eventHandlerClasses, //
 			Set<Class<? extends AbstractAnnotatedSaga>> sagaClasses, //
@@ -61,7 +62,7 @@ public class AxonConfig {
 			boolean useDisruptorCommandBus) {
 		super();
 		this.aggregateClasses = aggregateClasses;
-		this.aggregateCachingClasses = aggregateCachingClasses;
+		this.aggregateCachingClassesMap = aggregateCachingClassesMap;
 		this.commandHandlerClasses = commandHandlerClasses;
 		this.eventHandlerClasses = eventHandlerClasses;
 		this.sagaClasses = sagaClasses;
@@ -89,22 +90,28 @@ public class AxonConfig {
 		return FluentIterable.from(aggregateClasses).toList().toArray(new Class[0]);
 	}
 
-	public Set<Class<? extends EventSourcedAggregateRoot<?>>> getAggregateCachingClasses() {
-		return aggregateCachingClasses;
+	public Map<Class<? extends EventSourcedAggregateRoot<?>>, Duration> getAggregateCachingClasses() {
+		return aggregateCachingClassesMap;
 	}
 
 	@SuppressWarnings("unchecked")
 	public Class<? extends EventSourcedAggregateRoot<?>>[] getAggregateCachingClassesAsArray() {
-		return FluentIterable.from(aggregateCachingClasses).toList().toArray(new Class[0]);
+		return FluentIterable.from(aggregateCachingClassesMap.keySet()).toList().toArray(new Class[0]);
 	}
 
 	/**
 	 * Caching and non-caching aggregate roots are returned
+	 * 
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
 	public Class<? extends EventSourcedAggregateRoot<?>>[] getAllAggregateClassesAsArray() {
-		return FluentIterable.from(aggregateClasses).append(aggregateCachingClasses).toList().toArray(new Class[0]);
+		return FluentIterable.from(aggregateClasses).append(aggregateCachingClassesMap.keySet()).toList()
+				.toArray(new Class[0]);
+	}
+
+	public Duration getCachePeriod(Class<? extends EventSourcedAggregateRoot<?>> cls) {
+		return aggregateCachingClassesMap.get(cls);
 	}
 
 	public Set<Class<?>> getCommandHandlerClasses() {

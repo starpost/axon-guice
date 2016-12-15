@@ -27,6 +27,7 @@ import org.axonframework.eventstore.SnapshotEventStore;
 import org.axonframework.eventstore.fs.FileSystemEventStore;
 import org.axonframework.repository.Repository;
 
+import com.google.code.axonguice.config.Duration;
 import com.google.code.axonguice.grouping.ClassesSearchGroup;
 import com.google.code.axonguice.repository.RepositoryModule;
 import com.google.inject.Key;
@@ -90,9 +91,10 @@ public class EventSourcedRepositoryModule extends RepositoryModule<EventSourcedA
     }
 
 	@Override
-	protected void bindCachingRepository(Class<? extends EventSourcedAggregateRoot> aggregateRootClass) {
+	protected void bindCachingRepository(Class<? extends EventSourcedAggregateRoot<?>> aggregateRootClass,
+			Duration duration) {
         bindSnapshotterTrigger(aggregateRootClass);
-        Provider repositoryProvider = new CachingEventSourcingRepositoryProvider(aggregateRootClass);
+        Provider repositoryProvider = new CachingEventSourcingRepositoryProvider(aggregateRootClass, duration);
         requestInjection(repositoryProvider);
         bind(Key.get(TypeLiteral.get(Types.newParameterizedType(Repository.class, aggregateRootClass)))).toProvider(repositoryProvider).in(Scopes.SINGLETON);
         logger.info(String.format("\t\tCaching Repository set to: [%s]", repositoryProvider.getClass().getName()));

@@ -19,16 +19,19 @@
 package com.google.code.axonguice.repository;
 
 import java.util.Collection;
-import java.util.Set;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.axonframework.domain.AggregateRoot;
+import org.axonframework.eventsourcing.EventSourcedAggregateRoot;
 import org.reflections.Reflections;
 
 import com.google.code.axonguice.AxonGuiceModule;
+import com.google.code.axonguice.config.Duration;
 import com.google.code.axonguice.grouping.AbstractClassesGroupingModule;
 import com.google.code.axonguice.grouping.ClassesSearchGroup;
 import com.google.code.axonguice.util.ReflectionsHelper;
-import com.google.common.collect.Sets;
+import com.google.common.collect.Maps;
 
 /**
  * Registers all Aggregate Roots repositories and all related components.
@@ -39,7 +42,7 @@ import com.google.common.collect.Sets;
  */
 public abstract class RepositoryModule<T extends AggregateRoot> extends AbstractClassesGroupingModule<T> {
 
-    private Set<Class<? extends T>> cachingClasses = Sets.newHashSet();
+    private Map<Class<? extends EventSourcedAggregateRoot<?>>, Duration> cachingClasses = Maps.newHashMap();
 
 	/*===========================================[ CONSTRUCTORS ]=================*/
 
@@ -63,8 +66,8 @@ public abstract class RepositoryModule<T extends AggregateRoot> extends Abstract
         bindRepositories();
     }
 
-	public void setCachingClasses(Class<? extends T>... cachingClasses) {
-		this.cachingClasses = Sets.newHashSet(cachingClasses);
+	public void setCachingClasses(Map<Class<? extends EventSourcedAggregateRoot<?>>, Duration> map) {
+		this.cachingClasses = map;
 	}
 
     protected void bindRepositories() {
@@ -96,14 +99,17 @@ public abstract class RepositoryModule<T extends AggregateRoot> extends Abstract
         }
     }
 
-    protected void bindCachingRepositories(Iterable<Class<? extends T>> aggregateRoots) {
-        for (Class<? extends T> aggregateRootClass : aggregateRoots) {
-            logger.info(String.format("\tFound: [%s]", aggregateRootClass.getName()));
-            bindCachingRepository(aggregateRootClass);
-        }
-    }
+	protected void bindCachingRepositories(
+			Map<Class<? extends EventSourcedAggregateRoot<?>>, Duration> cachingClasses2) {
+		for (Entry<Class<? extends EventSourcedAggregateRoot<?>>, Duration> aggregateRootClass : cachingClasses2
+				.entrySet()) {
+			logger.info(String.format("\tFound: [%s]", aggregateRootClass.getKey().getName()));
+			bindCachingRepository(aggregateRootClass.getKey(), aggregateRootClass.getValue());
+		}
+	}
 
 	protected abstract void bindRepository(Class<? extends T> aggregateRootClass);
 
-	protected abstract void bindCachingRepository(Class<? extends T> aggregateRootClass);
+	protected abstract void bindCachingRepository(Class<? extends EventSourcedAggregateRoot<?>> aggregateRootClass,
+			Duration duration);
 }

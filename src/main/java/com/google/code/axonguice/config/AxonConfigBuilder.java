@@ -18,7 +18,9 @@
  */
 package com.google.code.axonguice.config;
 
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Provider;
 
@@ -27,6 +29,7 @@ import org.axonframework.eventstore.EventStore;
 import org.axonframework.eventstore.SnapshotEventStore;
 import org.axonframework.saga.annotation.AbstractAnnotatedSaga;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.thoughtworks.xstream.converters.Converter;
 
@@ -37,7 +40,7 @@ import com.thoughtworks.xstream.converters.Converter;
 public class AxonConfigBuilder {
 
 	Set<Class<? extends EventSourcedAggregateRoot<?>>> aggregateClasses = Sets.newHashSet();
-	Set<Class<? extends EventSourcedAggregateRoot<?>>> aggregateCachingClasses = Sets.newHashSet();
+	Map<Class<? extends EventSourcedAggregateRoot<?>>, Duration> aggregateCachingClassesMap = Maps.newHashMap();
 	Set<Class<?>> commandHandlerClasses = Sets.newHashSet();
 	Set<Class<?>> eventHandlerClasses = Sets.newHashSet();
 	Set<Class<? extends AbstractAnnotatedSaga>> sagaClasses = Sets.newHashSet();
@@ -51,14 +54,14 @@ public class AxonConfigBuilder {
 	boolean useDisruptor = false;
 
 	public AxonConfigBuilder withAggregate(Class<? extends EventSourcedAggregateRoot<?>> aggregateClass) {
-		withAggregate(aggregateClass, false);
+		withAggregate(aggregateClass, null, null);
 		return this;
 	}
 
-	public AxonConfigBuilder withAggregate(Class<? extends EventSourcedAggregateRoot<?>> aggregateClass,
-			boolean caching) {
-		if (caching) {
-			aggregateCachingClasses.add(aggregateClass);
+	public AxonConfigBuilder withAggregate(Class<? extends EventSourcedAggregateRoot<?>> aggregateClass, Long ttl,
+			TimeUnit unit) {
+		if (ttl != null) {
+			aggregateCachingClassesMap.put(aggregateClass, new Duration(ttl, unit));
 		} else {
 			aggregateClasses.add(aggregateClass);
 		}
@@ -143,7 +146,7 @@ public class AxonConfigBuilder {
 	}
 
 	public AxonConfig build() {
-		return new AxonConfig(aggregateClasses, aggregateCachingClasses, commandHandlerClasses, eventHandlerClasses,
+		return new AxonConfig(aggregateClasses, aggregateCachingClassesMap, commandHandlerClasses, eventHandlerClasses,
 				sagaClasses, commandGatewayClasses, eventStoreProviderClass, snapshotEventStoreProviderClass,
 				converterClasses, asyncSagaManager, processorCount, useDisruptor);
 	}
