@@ -53,6 +53,9 @@ import com.google.inject.Scopes;
  */
 public class EventHandlingModule extends AbstractClassesGroupingModule<Object> {
 
+	// TODO to be configured
+	int asyncThreadCount = 10;
+	
     /*===========================================[ CONSTRUCTORS ]=================*/
 
     public EventHandlingModule(Class<?>... eventHandlersClasses) {
@@ -79,7 +82,7 @@ public class EventHandlingModule extends AbstractClassesGroupingModule<Object> {
     protected void bindEventBus() {
         Cluster defaultCluster = new SimpleCluster("default");
         
-		Cluster backgroundCluster = new AsynchronousCluster("background", Executors.newCachedThreadPool(),
+		Cluster backgroundCluster = new AsynchronousCluster("background", Executors.newFixedThreadPool(asyncThreadCount),
 				new FullConcurrencyPolicy());
 
         DefaultClusterSelector defaultGroup = new DefaultClusterSelector(defaultCluster);
