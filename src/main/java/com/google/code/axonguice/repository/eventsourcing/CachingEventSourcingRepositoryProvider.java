@@ -62,13 +62,15 @@ public class CachingEventSourcingRepositoryProvider extends RepositoryProvider {
     protected Provider<SnapshotterTrigger> snapshotterTriggerProvider;
     protected Provider<AggregateFactory> aggregateFactoryProvider;
     protected Duration cacheDuration;
-
+    protected boolean nolock;
+    
     /*===========================================[ CONSTRUCTORS ]=================*/
 
 	public CachingEventSourcingRepositoryProvider(Class<? extends AggregateRoot> aggregateRootClass,
-			Duration duration) {
+			Duration duration, boolean nolock) {
 		super(aggregateRootClass);
 		this.cacheDuration = duration;
+		this.nolock = nolock;
 	}
 
     @Inject
@@ -94,10 +96,14 @@ public class CachingEventSourcingRepositoryProvider extends RepositoryProvider {
 
     @Override
 	public Repository get() {
-		CachingEventSourcingRepository repository = new CachingEventSourcingRepository(aggregateFactoryProvider.get(),
-				eventStore, new NullLockManager());
+		CachingEventSourcingRepository repository;
+		if (nolock) {
+			repository = new CachingEventSourcingRepository(aggregateFactoryProvider.get(), eventStore,
+					new NullLockManager());
+		} else {
+			repository = new CachingEventSourcingRepository(aggregateFactoryProvider.get(), eventStore);
+		}
 		repository.setCache(new GuavaCache(cacheDuration.getTime(), cacheDuration.getUnit()));
-//		repository.setCache(new WeakReferenceCache());
 		repository.setEventBus(eventBus);
 
 		if (snapshotterTriggerProvider != null) {

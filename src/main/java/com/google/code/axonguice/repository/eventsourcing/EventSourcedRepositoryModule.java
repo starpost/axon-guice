@@ -82,21 +82,33 @@ public class EventSourcedRepositoryModule extends RepositoryModule<EventSourcedA
 	/*===========================================[ INTERFACE METHODS ]============*/
 
     @Override
-    protected void bindRepository(Class<? extends EventSourcedAggregateRoot> aggregateRootClass) {
-        bindSnapshotterTrigger(aggregateRootClass);
-        Provider repositoryProvider = new EventSourcingRepositoryProvider(aggregateRootClass);
-        requestInjection(repositoryProvider);
-        bind(Key.get(TypeLiteral.get(Types.newParameterizedType(Repository.class, aggregateRootClass)))).toProvider(repositoryProvider).in(Scopes.SINGLETON);
-        logger.info(String.format("\t\tRepository set to: [%s]", repositoryProvider.getClass().getName()));
-    }
+	protected void bindRepository(Class<? extends EventSourcedAggregateRoot> aggregateRootClass) {
+		bindSnapshotterTrigger(aggregateRootClass);
+		Provider repositoryProviderNoLock = new EventSourcingRepositoryProvider(aggregateRootClass);
+		requestInjection(repositoryProviderNoLock);
+		bind(Key.get(TypeLiteral.get(Types.newParameterizedType(Repository.class, aggregateRootClass)), NullLock.class))
+				.toProvider(repositoryProviderNoLock).in(Scopes.SINGLETON);
+
+		Provider repositoryProvider = new EventSourcingRepositoryProvider(aggregateRootClass);
+		requestInjection(repositoryProvider);
+		bind(Key.get(TypeLiteral.get(Types.newParameterizedType(Repository.class, aggregateRootClass))))
+				.toProvider(repositoryProvider).in(Scopes.SINGLETON);
+		logger.info(String.format("\t\tRepository set to: [%s]", repositoryProvider.getClass().getName()));
+	}
 
 	@Override
 	protected void bindCachingRepository(Class<? extends EventSourcedAggregateRoot<?>> aggregateRootClass,
 			Duration duration) {
         bindSnapshotterTrigger(aggregateRootClass);
-        Provider repositoryProvider = new CachingEventSourcingRepositoryProvider(aggregateRootClass, duration);
-        requestInjection(repositoryProvider);
-        bind(Key.get(TypeLiteral.get(Types.newParameterizedType(Repository.class, aggregateRootClass)))).toProvider(repositoryProvider).in(Scopes.SINGLETON);
+        Provider repositoryProviderNoLock = new CachingEventSourcingRepositoryProvider(aggregateRootClass, duration, true);
+        requestInjection(repositoryProviderNoLock);
+		bind(Key.get(TypeLiteral.get(Types.newParameterizedType(Repository.class, aggregateRootClass)), NullLock.class))
+				.toProvider(repositoryProviderNoLock).in(Scopes.SINGLETON);
+
+		Provider repositoryProvider = new CachingEventSourcingRepositoryProvider(aggregateRootClass, duration, false);
+		requestInjection(repositoryProvider);
+		bind(Key.get(TypeLiteral.get(Types.newParameterizedType(Repository.class, aggregateRootClass))))
+				.toProvider(repositoryProvider).in(Scopes.SINGLETON);
         logger.info(String.format("\t\tCaching Repository set to: [%s]", repositoryProvider.getClass().getName()));
 	}
 
