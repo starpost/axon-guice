@@ -61,60 +61,60 @@ public class AxonConfigBuilder {
 	public AxonConfigBuilder withAggregate(Class<? extends EventSourcedAggregateRoot<?>> aggregateClass, Long ttl,
 			TimeUnit unit) {
 		if (ttl != null) {
-			aggregateCachingClassesMap.put(aggregateClass, new Duration(ttl, unit));
+			this.aggregateCachingClassesMap.put(aggregateClass, new Duration(ttl, unit));
 		} else {
-			aggregateClasses.add(aggregateClass);
+			this.aggregateClasses.add(aggregateClass);
 		}
 		return this;
 	}
 
 	public AxonConfigBuilder withAggregates(Set<Class<? extends EventSourcedAggregateRoot<?>>> aggregateClasses) {
-		aggregateClasses.addAll(aggregateClasses);
+		this.aggregateClasses.addAll(aggregateClasses);
 		return this;
 	}
 
 	public AxonConfigBuilder withSaga(Class<? extends AbstractAnnotatedSaga> sagaClass) {
-		sagaClasses.add(sagaClass);
+		this.sagaClasses.add(sagaClass);
 		return this;
 	}
 
 	public AxonConfigBuilder withSagas(Set<Class<? extends AbstractAnnotatedSaga>> sagaClass) {
-		sagaClasses.addAll(sagaClass);
+		this.sagaClasses.addAll(sagaClass);
 		return this;
 	}
 
 	public AxonConfigBuilder withCommandHandler(Class<?> commandHandler) {
-		commandHandlerClasses.add(commandHandler);
+		this.commandHandlerClasses.add(commandHandler);
 		return this;
 	}
 
 	public AxonConfigBuilder withCommandHandlers(Set<Class<?>> commandHandlers) {
-		commandHandlerClasses.addAll(commandHandlers);
+		this.commandHandlerClasses.addAll(commandHandlers);
 		return this;
 	}
 
 	public AxonConfigBuilder withEventHandler(Class<?> eventHandler) {
-		eventHandlerClasses.add(eventHandler);
+		this.eventHandlerClasses.add(eventHandler);
 		return this;
 	}
 
 	public AxonConfigBuilder withEventHandlers(Set<Class<?>> eventHandlers) {
-		eventHandlerClasses.addAll(eventHandlers);
+		this.eventHandlerClasses.addAll(eventHandlers);
 		return this;
 	}
 
 	public AxonConfigBuilder withCommandGateway(Class<?> commandGateway) {
-		commandGatewayClasses.add(commandGateway);
+		this.commandGatewayClasses.add(commandGateway);
 		return this;
 	}
 
 	public AxonConfigBuilder withCommandGateways(Set<Class<?>> commandGateways) {
-		commandGatewayClasses.addAll(commandGateways);
+		this.commandGatewayClasses.addAll(commandGateways);
 		return this;
 	}
 
 	public AxonConfigBuilder withXStreamConverter(Class<? extends Converter> converter) {
-		converterClasses.add(converter);
+		this.converterClasses.add(converter);
 		return this;
 	}
 
